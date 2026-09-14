@@ -23,7 +23,12 @@ func Run(db *gorm.DB) error {
 		return err
 	}
 
-	files, err := filepath.Glob("migrations/*.sql")
+	baseDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working directory: %w", err)
+	}
+
+	files, err := filepath.Glob(filepath.Join(baseDir, "migrations", "*.sql"))
 	if err != nil {
 		return err
 	}
@@ -32,6 +37,7 @@ func Run(db *gorm.DB) error {
 
 	for _, file := range files {
 		name := filepath.Base(file)
+		_ = name
 
 		var count int64
 
