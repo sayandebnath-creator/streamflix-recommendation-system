@@ -1,6 +1,7 @@
 package ingestion
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -8,6 +9,10 @@ import (
 )
 
 func ParseMovie(record []string) (*movie.Movie, error) {
+	if len(record) < 24 {
+		return nil, fmt.Errorf("malformed movie row: expected at least 24 columns, got %d", len(record))
+	}
+
 	m := &movie.Movie{}
 
 	// TMDB ID

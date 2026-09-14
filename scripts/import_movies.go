@@ -48,7 +48,7 @@ func main() {
 		}
 
 		if err != nil {
-			log.Println(err)
+			log.Printf("skipping malformed row: %v\n", err)
 			continue
 		}
 
