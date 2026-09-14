@@ -38,41 +38,54 @@ func NewHTTPService(client *http.Client, baseURL string) *HTTPService {
 }
 
 func (s *HTTPService) GenerateEmbedding(ctx context.Context, text string) ([]float32, error) {
-	request := embeddingRequest{
+	requestBody := embeddingRequest{
 		Text: text,
 	}
 
-	body, err := json.Marshal(request)
+	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("marshal embedding request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(
-		ctx,
-		http.MethodPost,
-		s.baseURL+"/embed",
-		bytes.NewBuffer(body),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("create embedding request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	var resp *http.Response
-
 	for attempt := 0; attempt <= s.maxRetries; attempt++ {
 
-		resp, err = s.client.Do(req)
+		req, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodPost,
+			s.baseURL+"/embed",
+			bytes.NewReader(body),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("create embedding request: %w", err)
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := s.client.Do(req)
 
 		if err == nil && resp.StatusCode == http.StatusOK {
-			break
+
+			defer resp.Body.Close()
+
+			var response embeddingResponse
+
+			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+				return nil, fmt.Errorf(
+					"decode embedding response: %w",
+					err,
+				)
+			}
+
+			return response.Embedding, nil
 		}
 
 		if err == nil && !shouldRetry(resp.StatusCode) {
+			status := resp.StatusCode
+			resp.Body.Close()
+
 			return nil, fmt.Errorf(
 				"embedding service returned status %d",
-				resp.StatusCode,
+				status,
 			)
 		}
 
@@ -81,7 +94,19 @@ func (s *HTTPService) GenerateEmbedding(ctx context.Context, text string) ([]flo
 		}
 
 		if attempt == s.maxRetries {
-			return nil, fmt.Errorf("embedding request failed after %d retries", s.maxRetries)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"embedding request failed after %d retries: %w",
+					s.maxRetries,
+					err,
+				)
+			}
+
+			return nil, fmt.Errorf(
+				"embedding service returned status %d after %d retries",
+				resp.StatusCode,
+				s.maxRetries,
+			)
 		}
 
 		delay := s.baseBackoff * time.Duration(1<<attempt)
@@ -93,20 +118,5 @@ func (s *HTTPService) GenerateEmbedding(ctx context.Context, text string) ([]flo
 		}
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(
-			"embedding service returned status %d",
-			resp.StatusCode,
-		)
-	}
-
-	var response embeddingResponse
-
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return nil, fmt.Errorf("decode embedding response: %w", err)
-	}
-
-	return response.Embedding, nil
+	return nil, fmt.Errorf("embedding request failed")
 }
