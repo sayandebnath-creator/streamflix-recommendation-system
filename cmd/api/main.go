@@ -85,6 +85,19 @@ func main() {
 		recommendationHandler.GetRecommendations,
 	)
 
+	// Root endpoint
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":    "ok",
+			"message":   "Streamflix Backend is running 🚀",
+			"health":    "/health",
+			"movies":    "/movies",
+			"search":    "/search?q=...",
+			"metrics":   "/metrics",
+			"recommend": "/movies/:id/recommendations",
+		})
+	})
+
 	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
