@@ -29,8 +29,9 @@ type Movie struct {
 
 	PosterPath string `json:"poster_path"`
 
-	// Semantic embedding generated using BAAI/bge-small-en-v1.5
-	Embedding pgvector.Vector `gorm:"type:vector(384)" json:"-"`
+	// Semantic embedding generated using BAAI/bge-small-en-v1.5.
+	// Keep it NULL until the embedding is generated to avoid inserting an empty pgvector [] into Postgres.
+	Embedding *pgvector.Vector `gorm:"type:vector(384)" json:"-"`
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

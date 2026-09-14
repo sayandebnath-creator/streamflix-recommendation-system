@@ -49,7 +49,7 @@ func (r *Repository) UpdateEmbedding(ctx context.Context, movieID uuid.UUID, emb
 	return r.db.WithContext(ctx).
 		Model(&Movie{}).
 		Where("id = ?", movieID).
-		Update("embedding", vector).
+		Update("embedding", &vector).
 		Error
 }
 
