@@ -2,6 +2,7 @@ package movie
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"streamflix-backend/internal/embedding"
@@ -24,7 +25,28 @@ func NewHandler(
 }
 
 func (h *Handler) GetAllMovies(c *gin.Context) {
-	movies, err := h.service.GetAllMovies()
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "page must be a positive integer",
+		})
+		return
+	}
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if err != nil || limit < 1 || limit > 100 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "limit must be between 1 and 100",
+		})
+		return
+	}
+
+	movies, total, err := h.service.GetMovies(
+		c.Request.Context(),
+		page,
+		limit,
+	)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -32,7 +54,15 @@ func (h *Handler) GetAllMovies(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, movies)
+	c.JSON(http.StatusOK, gin.H{
+		"movies": movies,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + int64(limit) - 1) / int64(limit),
+		},
+	})
 }
 
 func (h *Handler) CreateMovie(c *gin.Context) {
