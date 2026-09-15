@@ -29,6 +29,32 @@ func (r *Repository) GetAll() ([]Movie, error) {
 	return movies, nil
 }
 
+func (r *Repository) GetPaginated(
+	ctx context.Context,
+	page int,
+	limit int,
+) ([]Movie, int64, error) {
+	var movies []Movie
+	var total int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&Movie{}).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+
+	if err := r.db.WithContext(ctx).
+		Limit(limit).
+		Offset(offset).
+		Find(&movies).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return movies, total, nil
+}
+
 func (r *Repository) GetWithoutEmbeddings(ctx context.Context, limit int) ([]Movie, error) {
 	var movies []Movie
 
