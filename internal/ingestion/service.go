@@ -33,19 +33,26 @@ func NewService(
 	}
 }
 
-func (s *Service) GenerateEmbedding(ctx context.Context, text string) ([]float32, error) {
-	return s.embeddingService.GenerateEmbedding(ctx, text)
+func (s *Service) GenerateEmbedding(
+	ctx context.Context,
+	text string,
+) ([]float32, error) {
+	return s.embeddingService.GenerateEmbedding(ctx, text, false)
 }
 
 func (s *Service) processMovie(ctx context.Context, movie movie.Movie) error {
-	if movie.Overview == "" {
+	if movie.Title == "" && movie.Genres == "" && movie.Overview == "" {
 		slog.Info(
-			"skipping movie: empty overview",
+			"skipping movie: no embedding content",
 			"movie_id", movie.ID,
 			"title", movie.Title,
 		)
 		return nil
 	}
+
+	document := "Title: " + movie.Title +
+		"\nGenres: " + movie.Genres +
+		"\nOverview: " + movie.Overview
 
 	slog.Info(
 		"generating embedding",
@@ -53,7 +60,11 @@ func (s *Service) processMovie(ctx context.Context, movie movie.Movie) error {
 		"title", movie.Title,
 	)
 
-	vector, err := s.embeddingService.GenerateEmbedding(ctx, movie.Overview)
+	vector, err := s.embeddingService.GenerateEmbedding(
+		ctx,
+		document,
+		false,
+	)
 	if err != nil {
 		return err
 	}
