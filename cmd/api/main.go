@@ -19,6 +19,7 @@ import (
 	"streamflix-backend/internal/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"streamflix-backend/internal/recommendation"
+	"github.com/gin-contrib/cors"
 )
 
 func main() {
@@ -72,6 +73,13 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		AllowCredentials: false,
+	}))
 
 	router.Use(metrics.Middleware())
 
