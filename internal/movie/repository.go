@@ -61,6 +61,7 @@ func (r *Repository) GetWithoutEmbeddings(ctx context.Context, limit int) ([]Mov
 	var movies []Movie
 
 	err := r.db.WithContext(ctx).
+		Where("poster_valid = ?", true).
 		Where("embedding IS NULL").
 		Limit(limit).
 		Find(&movies).Error
@@ -134,6 +135,7 @@ func (r *Repository) SearchSimilarMovies(
 	var movies []Movie
 
 	err := r.db.WithContext(ctx).
+		Where("poster_valid = ?", true).
 		Where("embedding IS NOT NULL").
 		Order(
 			gorm.Expr(
