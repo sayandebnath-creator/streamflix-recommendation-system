@@ -28,6 +28,7 @@ type Movie struct {
 	VoteCount   int     `json:"vote_count"`
 
 	PosterPath string `json:"poster_path"`
+	PosterValid bool   `json:"-"`
 
 	// Semantic embedding generated using BAAI/bge-small-en-v1.5.
 	// Keep it NULL until the embedding is generated to avoid inserting an empty pgvector [] into Postgres.

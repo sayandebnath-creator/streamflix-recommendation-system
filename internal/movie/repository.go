@@ -37,15 +37,17 @@ func (r *Repository) GetPaginated(
 	var movies []Movie
 	var total int64
 
-	if err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Model(&Movie{}).
-		Count(&total).Error; err != nil {
+		Where("poster_valid = ?", true)
+
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * limit
 
-	if err := r.db.WithContext(ctx).
+	if err := query.
 		Limit(limit).
 		Offset(offset).
 		Find(&movies).Error; err != nil {
@@ -68,6 +70,37 @@ func (r *Repository) GetWithoutEmbeddings(ctx context.Context, limit int) ([]Mov
 	}
 
 	return movies, nil
+}
+
+func (r *Repository) GetMoviesForPosterValidation(
+	ctx context.Context,
+	limit int,
+) ([]Movie, error) {
+	var movies []Movie
+
+	err := r.db.WithContext(ctx).
+		Where("poster_path <> ''").
+		Where("poster_valid IS NULL").
+		Limit(limit).
+		Find(&movies).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return movies, nil
+}
+
+func (r *Repository) UpdatePosterValidity(
+	ctx context.Context,
+	movieID uuid.UUID,
+	valid bool,
+) error {
+	return r.db.WithContext(ctx).
+		Model(&Movie{}).
+		Where("id = ?", movieID).
+		Update("poster_valid", valid).
+		Error
 }
 
 func (r *Repository) UpdateEmbedding(ctx context.Context, movieID uuid.UUID, embedding []float32) error {

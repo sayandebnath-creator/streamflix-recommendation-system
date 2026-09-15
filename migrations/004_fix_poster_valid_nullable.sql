@@ -1,0 +1,5 @@
+ALTER TABLE movies
+ALTER COLUMN poster_valid DROP NOT NULL;
+
+ALTER TABLE movies
+ALTER COLUMN poster_valid DROP DEFAULT;

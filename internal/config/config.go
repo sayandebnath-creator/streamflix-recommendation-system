@@ -19,6 +19,8 @@ type Config struct {
 	EmbeddingServiceURL string
 	EmbeddingBatchSize  int
 	EmbeddingWorkers int
+	PosterValidationBatchSize int
+	PosterValidationWorkers   int
 }
 
 func Load() *Config {
@@ -37,6 +39,16 @@ func Load() *Config {
 		workers = 5
 	}
 
+	posterBatchSize, err := strconv.Atoi(os.Getenv("POSTER_VALIDATION_BATCH_SIZE"))
+	if err != nil {
+		posterBatchSize = 100
+	}
+
+	posterWorkers, err := strconv.Atoi(os.Getenv("POSTER_VALIDATION_WORKERS"))
+	if err != nil {
+		posterWorkers = 10
+	}
+
 	return &Config{
 		Port:                os.Getenv("PORT"),
 		DBHost:              os.Getenv("DB_HOST"),
@@ -48,5 +60,7 @@ func Load() *Config {
 		EmbeddingServiceURL: os.Getenv("EMBEDDING_SERVICE_URL"),
 		EmbeddingBatchSize:  batchSize,
 		EmbeddingWorkers: workers,
+		PosterValidationBatchSize: posterBatchSize,
+		PosterValidationWorkers:   posterWorkers,
 	}
 }
