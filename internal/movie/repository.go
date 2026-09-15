@@ -126,7 +126,6 @@ func (r *Repository) CreateBatch(movies []Movie) error {
 		CreateInBatches(movies, 1000).Error
 }
 
-
 func (r *Repository) SearchSimilarMovies(
 	ctx context.Context,
 	vector pgvector.Vector,
@@ -137,12 +136,12 @@ func (r *Repository) SearchSimilarMovies(
 	err := r.db.WithContext(ctx).
 		Where("poster_valid = ?", true).
 		Where("embedding IS NOT NULL").
-		Order(
-			gorm.Expr(
-				"embedding <=> ?",
+		Clauses(clause.OrderBy{
+			Expression: gorm.Expr(
+				"embedding <=> CAST(? AS vector)",
 				vector,
 			),
-		).
+		}).
 		Limit(limit).
 		Find(&movies).Error
 
@@ -154,16 +153,16 @@ func (r *Repository) SearchSimilarMovies(
 }
 
 func (r *Repository) GetByID(
-    ctx context.Context,
-    id uuid.UUID,
+	ctx context.Context,
+	id uuid.UUID,
 ) (*Movie, error) {
-    var movie Movie
+	var movie Movie
 
-    if err := r.db.WithContext(ctx).
-        Where("id = ?", id).
-        First(&movie).Error; err != nil {
-        return nil, err
-    }
+	if err := r.db.WithContext(ctx).
+		Where("id = ?", id).
+		First(&movie).Error; err != nil {
+		return nil, err
+	}
 
-    return &movie, nil
+	return &movie, nil
 }
