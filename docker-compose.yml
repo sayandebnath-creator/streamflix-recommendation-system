@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: pgvector/pgvector:pg17
@@ -16,6 +14,52 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d streamflix"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  embedding-service:
+    build:
+      context: ./embedding-service
+    container_name: streamflix-embedding
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: streamflix-api
+    restart: unless-stopped
+
+    environment:
+      PORT: 8080
+
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: sayan12
+      DB_NAME: streamflix
+      DB_SSLMODE: disable
+
+      EMBEDDING_SERVICE_URL: http://embedding-service:8000
+
+      EMBEDDING_WORKERS: 5
+      EMBEDDING_BATCH_SIZE: 100
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      embedding-service:
+        condition: service_started
 
 volumes:
   postgres_data:
