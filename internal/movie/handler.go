@@ -99,6 +99,7 @@ func (h *Handler) SearchMovies(c *gin.Context) {
 	vector, err := h.embeddingService.GenerateEmbedding(
 		c.Request.Context(),
 		query,
+		true,
 	)
 
 	if err != nil {
