@@ -17,7 +17,8 @@ type HTTPService struct {
 }
 
 type embeddingRequest struct {
-	Text string `json:"text"`
+	Text    string `json:"text"`
+	IsQuery bool   `json:"is_query"`
 }
 
 type embeddingResponse struct {
@@ -37,9 +38,14 @@ func NewHTTPService(client *http.Client, baseURL string) *HTTPService {
 	}
 }
 
-func (s *HTTPService) GenerateEmbedding(ctx context.Context, text string) ([]float32, error) {
+func (s *HTTPService) GenerateEmbedding(
+	ctx context.Context,
+	text string,
+	isQuery bool,
+) ([]float32, error) {
 	requestBody := embeddingRequest{
-		Text: text,
+		Text:    text,
+		IsQuery: isQuery,
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -48,7 +54,6 @@ func (s *HTTPService) GenerateEmbedding(ctx context.Context, text string) ([]flo
 	}
 
 	for attempt := 0; attempt <= s.maxRetries; attempt++ {
-
 		req, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodPost,
@@ -64,7 +69,6 @@ func (s *HTTPService) GenerateEmbedding(ctx context.Context, text string) ([]flo
 		resp, err := s.client.Do(req)
 
 		if err == nil && resp.StatusCode == http.StatusOK {
-
 			defer resp.Body.Close()
 
 			var response embeddingResponse
