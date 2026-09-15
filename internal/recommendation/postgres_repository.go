@@ -29,6 +29,7 @@ func (r *PostgresRepository) FindSimilarMovies(
 SELECT *
 FROM movies
 WHERE id <> ?
+  AND poster_valid = TRUE
   AND embedding IS NOT NULL
 ORDER BY embedding <=> (
 	SELECT embedding
