@@ -21,6 +21,18 @@ func (s *Service) GetAllMovies() ([]Movie, error) {
 	return s.repo.GetAll()
 }
 
+func (s *Service) GetMovies(
+	ctx context.Context,
+	page int,
+	limit int,
+) ([]Movie, int64, error) {
+	return s.repo.GetPaginated(
+		ctx,
+		page,
+		limit,
+	)
+}
+
 func (s *Service) CreateMovie(movie *Movie) error {
 	return s.repo.Create(movie)
 }
