@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"streamflix-backend/internal/embedding"
 	"github.com/pgvector/pgvector-go"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -121,4 +122,28 @@ func (h *Handler) SearchMovies(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, movies)
+}
+
+func (h *Handler) GetMovie(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid movie id",
+		})
+		return
+	}
+
+	movie, err := h.service.GetMovie(
+		c.Request.Context(),
+		id,
+	)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "movie not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, movie)
 }

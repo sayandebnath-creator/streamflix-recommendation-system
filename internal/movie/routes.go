@@ -7,6 +7,7 @@ func RegisterRoutes(
 	handler *Handler,
 ) {
 	router.GET("/movies", handler.GetAllMovies)
+	router.GET("/movies/:id", handler.GetMovie)
 	router.POST("/movies", handler.CreateMovie)
 	router.GET("/search", handler.SearchMovies)
 }

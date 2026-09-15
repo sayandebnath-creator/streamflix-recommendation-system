@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/pgvector/pgvector-go"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -47,4 +48,11 @@ func (s *Service) SearchSimilarMovies(
 		vector,
 		limit,
 	)
+}
+
+func (s *Service) GetMovie(
+    ctx context.Context,
+    id uuid.UUID,
+) (*Movie, error) {
+    return s.repo.GetByID(ctx, id)
 }

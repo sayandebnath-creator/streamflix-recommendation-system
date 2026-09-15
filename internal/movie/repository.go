@@ -117,3 +117,18 @@ func (r *Repository) SearchSimilarMovies(
 
 	return movies, nil
 }
+
+func (r *Repository) GetByID(
+    ctx context.Context,
+    id uuid.UUID,
+) (*Movie, error) {
+    var movie Movie
+
+    if err := r.db.WithContext(ctx).
+        Where("id = ?", id).
+        First(&movie).Error; err != nil {
+        return nil, err
+    }
+
+    return &movie, nil
+}
